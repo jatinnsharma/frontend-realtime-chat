@@ -3,7 +3,7 @@ import axios from "axios"
 import { getUserDetailsURL } from '../../api';
 import {headers} from "../../utils/Header"
 
-const Message = ({chat,currentUser}) => {
+const Message = ({chat,currentUser,isActive}) => {
     
     
     const [user,setUser] = useState(null);
@@ -28,7 +28,7 @@ const Message = ({chat,currentUser}) => {
 
   
   return !user? <h5>Loading conversation</h5> :  (
-    <div className="flex items-center mb-2">
+    <div className={`flex items-center mb-2 ${isActive ? 'active' : ''}`}>
     <img src={user.avatar} className="rounded-full mr-2 h-8 w-8" alt="avatar" />
     <span className="text-xs text-gray-700">{user.username}</span>
   </div>

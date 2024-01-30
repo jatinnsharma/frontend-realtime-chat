@@ -14,8 +14,8 @@ const TextMessage = ({ message, own }) => {
       return (
         <>
           <span>{message.text.slice(0, 150)}</span>
-          <span className="text-blue-500 cursor-pointer" onClick={toggleExpand}>
-            Read More
+          <span className="text-blue-500 ml-1 text-xs cursor-pointer" onClick={toggleExpand}>
+            Read More...
           </span>
         </>
       );
@@ -31,7 +31,7 @@ const TextMessage = ({ message, own }) => {
     <div className={`flex ${own ? 'justify-end' : 'justify-start'} mb-2`}>
       <div
         className={`max-w-xs p-3  rounded-lg ${
-          own ? 'bg-[#28B463] text-white ' : 'bg-gray-300 text-black'
+          own ? 'bg-[#e7fdcc] ' : 'bg-[#e0e0e0] '
         }`}
       >
         {isImage ? (

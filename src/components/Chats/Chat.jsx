@@ -13,7 +13,7 @@ import {
 import TextMessage from "./TextMessage";
 import { io } from "socket.io-client";
 import { CiImageOn, CiFaceSmile } from "react-icons/ci";
-import { emojiList } from "../../utils/Emoji";
+import { bgChatUrl, emojiList } from "../../utils/Emoji";
 
 const Chat = () => {
   const { user } = useAuth();
@@ -26,23 +26,23 @@ const Chat = () => {
   const [showOptions, setShowOptions] = useState(false);
   const socket = useRef();
   const fileInputRef = useRef(null);
+  const emojiButtonRef = useRef(null);
+  const optionsButtonRef = useRef(null);
 
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiList, setShowEmojiList] = useState(false);
-  
+
 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
 
     socket.current.on("isTyping", ({ senderId }) => {
       setIsTyping(true);
-      let TypingTime = setTimeout(() => {
+      setTimeout(() => {
         setIsTyping(false);
-      }, 5000);
+      }, 3000);
 
-      return () => {
-        clearTimeout(TypingTime);
-      };
+    
     });
 
     socket.current.on("getMessage", (data) => {
@@ -54,10 +54,33 @@ const Chat = () => {
         createdAt: Date.now(),
       });
     });
+
+    const handleClickOutside = (event) => {
+      if (
+        emojiButtonRef.current &&
+        !emojiButtonRef.current.contains(event.target) &&
+        showEmojiList
+      ) {
+        setShowEmojiList(false);
+      }
+
+      if (
+        optionsButtonRef.current &&
+        !optionsButtonRef.current.contains(event.target) &&
+        showOptions
+      ) {
+        setShowOptions(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
     return () => {
       socket.current.disconnect();
+      document.removeEventListener("click", handleClickOutside);
     };
-  }, []);
+  }, [showEmojiList, showOptions]);
+
 
   useEffect(() => {
     if (user) {
@@ -90,7 +113,7 @@ const Chat = () => {
     if (user) {
       try {
         const res = await axios.get(`${getConversationURL}/${user._id}`);
-        console.log("response", res.data);
+      
         setConversations(res.data);
       } catch (error) {
         console.log(error);
@@ -218,19 +241,24 @@ const Chat = () => {
     <div className="flex justify-center items-center w-full h-screen ">
       <div className="flex w-4/6 shadow-md rounded-md">
         <div className="w-1/4 bg-gray-50 p-4">
+         <h1 className="my-2">Conversation</h1>
           {conversations.map((chat, index) => {
+              const isActive = currentUser && currentUser._id === chat._id;
             return (
               <div
                 key={index}
-                className="cursor-pointer rounded-md p-2 hover:bg-gray-100"
+              
+                className={`cursor-pointer rounded-md p-2 hover:bg-gray-100 ${
+                  isActive ? "bg-gray-200" : ""
+                }`}
                 onClick={() => setCurrentUser(chat)}
               >
-                <Message chat={chat} currentUser={user} />
+                <Message chat={chat} currentUser={user} isActive={isActive}/>
               </div>
             );
           })}
         </div>
-        <div className="w-3/4 bg-[#eeeeee] p-4">
+        <div className="w-3/4 bg-[#eeeeee] p-4 "  >
           {isTyping && <div className="text-gray-500">typing...</div>}
           <ScrollToBottom className="h-[70vh] overflow-y-auto">
             {messages.length === 0 ? (
@@ -254,7 +282,7 @@ const Chat = () => {
             <div className="flex-1">
               <input
                 placeholder="Type your message here..."
-                className="border p-2 w-full rounded-l-md"
+                className="border p-2 w-full rounded-l-md outline-none "
                 type="text"
                 onChange={(e) => {
                   setNewMessage(e.target.value);
@@ -265,34 +293,37 @@ const Chat = () => {
               />
             </div>
             <button
+            ref={optionsButtonRef}
               className="text-gray-600 bg-gray-100 shadow-md px-2 rounded-full absolute right-[19rem]"
               onClick={() => setShowOptions(!showOptions)}
             >
               +
             </button>
+            <div className="cursor-pointer absolute right-[21rem]"  ref={emojiButtonRef} >
+                  <CiFaceSmile
+                    size={25}
+                    onClick={() => setShowEmojiList(!showEmojiList)}
+                  />
+                </div>
             {showOptions && (
               <div className="absolute right-[22rem] flex top-[29rem] p-2 bg-white border rounded-md w-40 h-20">
                 <div>
                   <label
                     htmlFor="photo"
-                    className="cursor-pointer text-gray-700"
+                    className="cursor-pointer text-gray-600"
                     onClick={handleImageClick}
                   >
                     <CiImageOn size={25} />
                   </label>
                   <input type="file" ref={fileInputRef} className="hidden" />
                 </div>
-                <div className="cursor-pointer">
-                  <CiFaceSmile
-                    size={25}
-                    onClick={() => setShowEmojiList(!showEmojiList)}
-                  />
-                </div>
+               
+               
               </div>
             )}
 
             {showEmojiList && (
-              <div className="absolute bottom-20 right-[0rem] bg-gray-500 p-2 rounded-md w-30">
+              <div className="absolute bottom-[6.2rem] right-[3.5rem] bg-[#9e9e9e]  p-2 rounded-md w-30">
                 <div className="grid grid-cols-10 gap-2">
                   {emojiList.map((emoji, index) => (
                     <span
@@ -307,7 +338,7 @@ const Chat = () => {
               </div>
             )}
             <button
-              className="bg-green-500 text-white p-2 rounded-r-md"
+              className="bg-green-700 text-white p-2 rounded-r-md"
               onClick={handleNewMessage}
             >
               Send
