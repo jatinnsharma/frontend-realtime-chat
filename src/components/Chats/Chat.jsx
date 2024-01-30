@@ -26,14 +26,28 @@ const Chat = () => {
   const socket = useRef();
   const fileInputRef = useRef(null);
 
+  const [isTyping, setIsTyping] = useState(false);
+
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
+
+    socket.current.on("isTyping", ({ senderId }) => {
+      setIsTyping(true);
+     let TypingTime = setTimeout(() => {
+        setIsTyping(false);
+      }, 5000);
+
+      return ()=>{
+        clearTimeout(TypingTime)
+      }
+    });
+
     socket.current.on("getMessage", (data) => {
-      console.log("socketdata",data)
+      console.log("socketdata", data);
       setArrivalMessage({
         sender: data.senderId,
         text: data.text,
-        photo:data.photo,
+        photo: data.photo,
         createdAt: Date.now(),
       });
     });
@@ -144,8 +158,6 @@ const Chat = () => {
         text: newMessage,
       };
 
-    
-
       socket.current.emit("sendMessage", {
         senderId: user._id,
         receiverId,
@@ -175,10 +187,28 @@ const Chat = () => {
     }
   };
 
+  // useEffect(() => {
+  //   socket.current.on("isTyping", ({ senderId }) => {
+  //     setIsTyping(true);
+  //     setTimeout(() => {
+  //       setIsTyping(false);
+  //     }, 5000);
+  //   });
+  // }, []);
+
+  // In your server-side code where you handle socket connections
+  const handleTyping = () => {
+    const receiverId = currentUser.members.find(
+      (member) => member !== user._id
+    );
+    socket.current.emit("typing", { senderId: user._id, receiverId });
+  };
+
   return !conversations ? (
     <h1>Loading data</h1>
   ) : (
     <div className="flex justify-center items-center w-full h-screen ">
+            
       <div className="flex w-4/6 shadow-md rounded-md">
         <div className="w-1/4 bg-gray-50 p-4">
           {conversations.map((chat, index) => {
@@ -194,6 +224,7 @@ const Chat = () => {
           })}
         </div>
         <div className="w-3/4 bg-[#eeeeee] p-4">
+        {isTyping && <div className="text-gray-500">typing...</div>}
           <ScrollToBottom className="h-[70vh] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 ">
@@ -213,12 +244,16 @@ const Chat = () => {
           </ScrollToBottom>
           {/* send new Message */}
           <div className="flex justify-center items-center mt-4">
+     
             <div className="flex-1">
               <input
                 placeholder="Type your message here..."
                 className="border p-2 w-full rounded-l-md"
                 type="text"
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  handleTyping();
+                }}
                 onKeyDown={handleKeyPress}
                 value={newMessage}
               />
