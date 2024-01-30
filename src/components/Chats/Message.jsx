@@ -27,10 +27,10 @@ const Message = ({chat,currentUser}) => {
 
 
   
-  return !user? <h1>Hello world</h1> :  (
+  return !user? <h5>Loading conversation</h5> :  (
     <div className="flex items-center mb-2">
-    <img src={user.avatar} className="rounded-full mr-2" height="40" width="40" alt="avatar" />
-    <span className="text-lg font-semibold">{user.username}</span>
+    <img src={user.avatar} className="rounded-full mr-2 h-8 w-8" alt="avatar" />
+    <span className="text-xs text-gray-700">{user.username}</span>
   </div>
   )
 }
