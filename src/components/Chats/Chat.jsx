@@ -12,7 +12,8 @@ import {
 } from "../../api";
 import TextMessage from "./TextMessage";
 import { io } from "socket.io-client";
-import { CiImageOn } from "react-icons/ci";
+import { CiImageOn, CiFaceSmile } from "react-icons/ci";
+import { emojiList } from "../../utils/Emoji";
 
 const Chat = () => {
   const { user } = useAuth();
@@ -27,19 +28,21 @@ const Chat = () => {
   const fileInputRef = useRef(null);
 
   const [isTyping, setIsTyping] = useState(false);
+  const [showEmojiList, setShowEmojiList] = useState(false);
+  
 
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
 
     socket.current.on("isTyping", ({ senderId }) => {
       setIsTyping(true);
-     let TypingTime = setTimeout(() => {
+      let TypingTime = setTimeout(() => {
         setIsTyping(false);
       }, 5000);
 
-      return ()=>{
-        clearTimeout(TypingTime)
-      }
+      return () => {
+        clearTimeout(TypingTime);
+      };
     });
 
     socket.current.on("getMessage", (data) => {
@@ -204,11 +207,15 @@ const Chat = () => {
     socket.current.emit("typing", { senderId: user._id, receiverId });
   };
 
+  const handleEmojiClick = (emoji) => {
+    setNewMessage((prev) => prev + emoji);
+    setShowEmojiList(false);
+  };
+
   return !conversations ? (
     <h1>Loading data</h1>
   ) : (
     <div className="flex justify-center items-center w-full h-screen ">
-            
       <div className="flex w-4/6 shadow-md rounded-md">
         <div className="w-1/4 bg-gray-50 p-4">
           {conversations.map((chat, index) => {
@@ -224,7 +231,7 @@ const Chat = () => {
           })}
         </div>
         <div className="w-3/4 bg-[#eeeeee] p-4">
-        {isTyping && <div className="text-gray-500">typing...</div>}
+          {isTyping && <div className="text-gray-500">typing...</div>}
           <ScrollToBottom className="h-[70vh] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="text-center text-gray-500 ">
@@ -244,7 +251,6 @@ const Chat = () => {
           </ScrollToBottom>
           {/* send new Message */}
           <div className="flex justify-center items-center mt-4">
-     
             <div className="flex-1">
               <input
                 placeholder="Type your message here..."
@@ -265,15 +271,39 @@ const Chat = () => {
               +
             </button>
             {showOptions && (
-              <div className="absolute right-[22rem] top-[29rem] p-2 bg-white border rounded-md w-40 h-20">
-                <label
-                  htmlFor="photo"
-                  className="cursor-pointer text-gray-700"
-                  onClick={handleImageClick}
-                >
-                  <CiImageOn size={25} />
-                </label>
-                <input type="file" ref={fileInputRef} className="hidden" />
+              <div className="absolute right-[22rem] flex top-[29rem] p-2 bg-white border rounded-md w-40 h-20">
+                <div>
+                  <label
+                    htmlFor="photo"
+                    className="cursor-pointer text-gray-700"
+                    onClick={handleImageClick}
+                  >
+                    <CiImageOn size={25} />
+                  </label>
+                  <input type="file" ref={fileInputRef} className="hidden" />
+                </div>
+                <div className="cursor-pointer">
+                  <CiFaceSmile
+                    size={25}
+                    onClick={() => setShowEmojiList(!showEmojiList)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {showEmojiList && (
+              <div className="absolute bottom-20 right-[0rem] bg-gray-500 p-2 rounded-md w-30">
+                <div className="grid grid-cols-10 gap-2">
+                  {emojiList.map((emoji, index) => (
+                    <span
+                      key={index}
+                      onClick={() => handleEmojiClick(emoji)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {emoji}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
             <button
