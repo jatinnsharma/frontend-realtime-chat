@@ -34,7 +34,29 @@ const Chat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [showEmojiList, setShowEmojiList] = useState(false);
   const [userDetails, setUserDetails] = useState({});
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    const storedConversations = JSON.parse(localStorage.getItem("conversations"));
+
+    if (storedUser) {
+      setCurrentUser(storedUser);
+    }
+
+    if (storedConversations) {
+      setConversations(storedConversations);
+    }
+
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("user", JSON.stringify(currentUser));
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem("conversations", JSON.stringify(conversations));
+  }, [conversations]);
+
+
 
 
   useEffect(() => {
@@ -44,7 +66,7 @@ const Chat = () => {
       setIsTyping(true);
       setTimeout(() => {
         setIsTyping(false);
-      }, 3000);
+      }, 5000);
     });
 
     socket.current.on("getMessage", (data) => {
@@ -90,10 +112,9 @@ const Chat = () => {
       socket.current.emit("addUser", user._id);
       socket.current.on("getUsers", (users) => {
         console.log("users", users);
+          
       });
-      socket.current.on("onlineUsers", (onlineUsers) => {
-        setOnlineUsers(onlineUsers);
-    });
+  
     }
   }, [user]);
 
@@ -145,7 +166,7 @@ const Chat = () => {
     }
 
     let message;
-    const receiverId = currentUser.members.find(
+    const receiverId = await currentUser.members.find(
       (member) => member !== user._id
     );
     if (fileInputRef?.current?.files?.length > 0) {
@@ -164,7 +185,7 @@ const Chat = () => {
           }
         );
 
-        message = {
+         message = {
           chatId: currentUser._id,
           senderId: user._id,
           receiverId,
@@ -335,13 +356,13 @@ const Chat = () => {
               </div>
               <button
                 ref={optionsButtonRef}
-                className="text-gray-600 bg-gray-100 shadow-md px-2 rounded-full absolute right-[19rem]"
+                className="text-gray-600 bg-gray-100 shadow-md px-2 rounded-full absolute right-[12rem] md:right-[19rem]"
                 onClick={() => setShowOptions(!showOptions)}
               >
                 +
               </button>
               <div
-                className="cursor-pointer absolute right-[21rem]"
+                className="cursor-pointer absolute right-[14rem] md:right-[21rem]"
                 ref={emojiButtonRef}
               >
                 <CiFaceSmile
@@ -350,7 +371,7 @@ const Chat = () => {
                 />
               </div>
               {showOptions && (
-                <div className="absolute right-[22rem] flex top-[29rem] p-2 bg-white border rounded-md w-40 h-20">
+                <div className="absolute  top-[18rem] right-[12rem] md:right-[19.5rem] flex right- md:top-[28.4rem] p-2 bg-white border rounded-md w-40 h-20">
                   <div>
                     <label
                       htmlFor="photo"
